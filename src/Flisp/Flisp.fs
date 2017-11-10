@@ -1,8 +1,6 @@
 module Flisp
 open System.Collections.Generic
 open System
-open System.Xml
-open System.Security.Policy
 
 type Cell = 
     | Symbol of string
@@ -43,6 +41,7 @@ let rec eval expr =
         | Symbol sym -> resolveSymbol sym (fun cell -> [cell])
         | Number _ -> [x]
         | Lispt cells -> newExpr cells expr.env |> eval
+        | Lambda _ -> [x]
 
     | x::xs -> 
         match x with
@@ -55,14 +54,12 @@ let rec eval expr =
             [res]
 
         // For metaprocedures, we want to examine the ast directly
-        | MetaProcedure proc ->
-            let res = proc.Invoke(xs, expr.env) |> handleProcResult
-
-            [res]
+        | MetaProcedure proc -> [proc.Invoke(xs, expr.env) |> handleProcResult]
 
         | Symbol sym -> resolveSymbol sym (fun cell -> eval ({ cells = cell::xs; env = expr.env }))
         | Number _ -> x :: (newExpr xs expr.env |> eval)
         | Lispt cells -> newExpr cells expr.env |> eval        
+        | Lambda _ -> [x]
 
 let proc_print cells env =
     match cells with
@@ -74,13 +71,13 @@ let proc_print cells env =
 let proc_add cells env =
     match cells with 
     | [Number x; Number y] -> Success (Number (x+y))
-    | _ -> Error "something bad"
+    | _ -> Error "incorrect signature for add"
 
 let proc_map cells (env: ExecEnv) =
     match cells with
 
     // We're looking for a very specific signature for map
-    | [Lispt [Symbol "lambda"; Lispt [Symbol el]; Lispt fn]; Lispt items] ->
+    | [Lambda ({ parms = [Symbol el]; body = fn}); Lispt items] ->
         // The functor
         let iterMap item = 
             let newEnv = new Dictionary<string, Cell>(env)
@@ -106,7 +103,7 @@ let proc_map cells (env: ExecEnv) =
 let makeDefaultEnv() =
     let env = dict [
         "nil", Value nil;
-        "map", MetaProcedure (new Proc(proc_map));
+        "map", Procedure (new Proc(proc_map));
         "print", Procedure (new Proc(proc_print));
         "+", Procedure (new Proc(proc_add))
     ]
@@ -129,21 +126,18 @@ let addAndPrintNums = defaultExpr [
     ]
 ]
 
+let lambda parms body = { parms = parms; body = body }
+
 let mapList = defaultExpr [
     Symbol "map"
-    Lispt [
-        Symbol "lambda"
-        Lispt [
+    Lambda (lambda 
+        [Symbol "n"] 
+        [Lispt [
+            Symbol "print" 
             Symbol "n"
-        ]
-        Lispt [
-            Lispt [
-                Symbol "print"
-                Symbol "n"
-            ]
-            Symbol "n"
-        ]
-    ]
+        ];
+        Symbol "n"
+    ])
     Lispt [
         Number 3.0
         Number 5.0
