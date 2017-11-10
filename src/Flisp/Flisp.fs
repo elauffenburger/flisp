@@ -14,6 +14,7 @@ type Cell =
     | End
     | Whitespace
     | Procedure of Proc
+    | MetaProcedure of Proc
 and Lambda = { parms: Cell list; body: Cell list }
 and ExecEnv = Dictionary<string, Cell>
 and ProcResult = Success of Cell | Error of string
@@ -45,9 +46,17 @@ let rec eval expr =
 
     | x::xs -> 
         match x with
+        
+        // For actual procedures we want to evaluate all inner expressions
         | Procedure proc -> 
             let innerExpression = newExpr xs expr.env |> eval
             let res = proc.Invoke(innerExpression, expr.env) |> handleProcResult
+
+            [res]
+
+        // For metaprocedures, we want to examine the ast directly
+        | MetaProcedure proc ->
+            let res = proc.Invoke(xs, expr.env) |> handleProcResult
 
             [res]
 
@@ -69,13 +78,15 @@ let proc_add cells env =
 
 let proc_map cells (env: ExecEnv) =
     match cells with
-    | [Symbol "lambda"; Lispt [ Symbol el; Lispt fn ]; Lispt items] ->
-        // Map over items
-        let result = items |> List.map (fun item ->
+
+    // We're looking for a very specific signature for map
+    | [Lispt [Symbol "lambda"; Lispt [Symbol el]; Lispt fn]; Lispt items] ->
+        // The functor
+        let iterMap item = 
             let newEnv = new Dictionary<string, Cell>(env)
 
-            // Add parameter to environment
-            newEnv.[el] = Symbol el
+            // Add functor parameter to environment
+            newEnv.Add(el, item)
 
             // eval fn 
             let res = newExpr fn newEnv |> eval
@@ -84,15 +95,18 @@ let proc_map cells (env: ExecEnv) =
             | [x] -> x
             | [] -> Symbol "nil"
             | _ -> Lispt res
-        )
+
+        // Map over items
+        let result = items |> List.map iterMap
         
         Success (Lispt result)
+
     | _ -> Error "incorrect signature for map"
 
 let makeDefaultEnv() =
     let env = dict [
         "nil", Value nil;
-        "map", Procedure (new Proc(proc_map));
+        "map", MetaProcedure (new Proc(proc_map));
         "print", Procedure (new Proc(proc_print));
         "+", Procedure (new Proc(proc_add))
     ]
@@ -139,7 +153,7 @@ let mapList = defaultExpr [
 
 [<EntryPoint>]
 let main argv =
-    let program = addAndPrintNums
+    let program = mapList
 
     let res = eval program
 
