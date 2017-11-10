@@ -22,12 +22,10 @@ let mapList = defaultExpr [
     Symbol "map"
     (lambda 
         [Symbol "n"] 
-        [Lispt [
-            Symbol "print" 
-            Symbol "n"
-        ];
-        Symbol "n"
-    ])
+        [
+            Lispt [Symbol "print"; Symbol "n"]
+            Lispt [Symbol "+"; Symbol "n"; Number 1.0]
+        ])
     Quote (Lispt [
         Number 3.0
         Number 5.0
@@ -57,7 +55,7 @@ let mapListAndReturnNum = defaultExpr [
 
 [<EntryPoint>]
 let main argv =
-    let program = mapListAndReturnNum
+    let program = mapList
 
     let res = eval program
 
