@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>net462</TargetFramework>
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>portable</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <Compile Include="Flisp.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Flisp.Core\Flisp.Core.fsproj" />
+    <Compile Include="Syntax/Common.fs" />
+    <Compile Include="Interpreter/Eval.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
