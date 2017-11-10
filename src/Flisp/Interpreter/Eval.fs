@@ -87,11 +87,21 @@ let map cells (env: ExecEnv) =
 
     | _ -> Error "incorrect signature for map"
 
+let define cells (env: ExecEnv) =
+    match cells with
+    | [Symbol symbol; (value: Cell)] ->
+        // Update the environment with the new symbol
+        env.Add(symbol, value)
+
+        Success value
+    | _ -> Error "Wrong signature for define"
+
 let makeDefaultEnv() =
     let env = dict [
         "nil", Value nil;
         "map", Procedure (new Proc(map));
         "print", Procedure (new Proc(print));
+        "define", Procedure (new Proc(define));
         "+", Procedure (new Proc(add))
     ]
 
