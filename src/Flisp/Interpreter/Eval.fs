@@ -3,8 +3,6 @@ module Flisp.Core.Interpreter.Eval
 open System.Collections.Generic
 open Flisp.Core.Syntax.Common
 
-let newExpr cells env = { cells = cells; env = env }
-
 let handleProcResult result =
     match result with
     | Error err -> failwith err
@@ -26,8 +24,9 @@ let rec eval expr =
         | Quote cell -> [cell]
 
     | x::xs -> 
+        let evalRest rest = newExpr rest expr.env |> eval
+
         match x with
-        
         // For actual procedures we want to evaluate all inner expressions
         | Procedure proc -> 
             let innerExpression = newExpr xs expr.env |> eval
@@ -39,24 +38,29 @@ let rec eval expr =
         | MetaProcedure proc -> [proc.Invoke(xs, expr.env) |> handleProcResult]
 
         | Symbol sym -> resolveSymbol sym (fun cell -> eval ({ cells = cell::xs; env = expr.env }))
-        | Lispt cells -> newExpr cells expr.env |> eval        
-        | Number _ -> x :: (newExpr xs expr.env |> eval)
-        | Lambda _ -> x :: (newExpr xs expr.env |> eval)
-        | Quote cell -> cell :: (newExpr xs expr.env |> eval)
+        | Lispt cells -> 
+            // We need to evaluate the expression in the list, but only for side effects
+            (evalRest cells) |> ignore
 
-let proc_print cells env =
+            // The last expression is the one that actually gets returned
+            evalRest xs 
+        | Number _ -> x :: evalRest xs
+        | Lambda _ -> x :: evalRest xs 
+        | Quote cell -> cell :: evalRest xs
+
+let print cells env =
     match cells with
     | [] -> Success (Symbol "nil")
     | _ -> 
         printfn "%A" cells 
         Success (Symbol "nil")
 
-let proc_add cells env =
+let add cells env =
     match cells with 
     | [Number x; Number y] -> Success (Number (x+y))
     | _ -> Error "incorrect signature for add"
 
-let proc_map cells (env: ExecEnv) =
+let map cells (env: ExecEnv) =
     match cells with
 
     // We're looking for a very specific signature for map
@@ -86,9 +90,9 @@ let proc_map cells (env: ExecEnv) =
 let makeDefaultEnv() =
     let env = dict [
         "nil", Value nil;
-        "map", Procedure (new Proc(proc_map));
-        "print", Procedure (new Proc(proc_print));
-        "+", Procedure (new Proc(proc_add))
+        "map", Procedure (new Proc(map));
+        "print", Procedure (new Proc(print));
+        "+", Procedure (new Proc(add))
     ]
 
     new ExecEnv(env)

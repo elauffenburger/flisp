@@ -21,3 +21,5 @@ and Proc = delegate of Cell list * ExecEnv -> ProcResult
 type Expression = {cells: Cell list; env: ExecEnv }
 
 let nil = ()
+let lambda parms body = Lambda({ parms = parms; body = body })
+let newExpr cells env = { cells = cells; env = env }

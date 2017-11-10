@@ -1,7 +1,6 @@
-module Flisp
+module Flisp.Executable
 
 open System
-open System.Collections.Generic
 open Flisp.Core.Syntax.Common
 open Flisp.Core.Interpreter.Eval
 
@@ -19,11 +18,9 @@ let addAndPrintNums = defaultExpr [
     ]
 ]
 
-let lambda parms body = { parms = parms; body = body }
-
 let mapList = defaultExpr [
     Symbol "map"
-    Lambda (lambda 
+    (lambda 
         [Symbol "n"] 
         [Lispt [
             Symbol "print" 
@@ -38,14 +35,32 @@ let mapList = defaultExpr [
     ])
 ]
 
+let mapListAndReturnNum = defaultExpr [
+    Lispt [
+        Symbol "map"
+        (lambda 
+            [Symbol "n"] 
+            [Lispt [
+                Symbol "print" 
+                Symbol "n"
+            ];
+            Symbol "n"
+        ])
+        Quote (Lispt [
+            Number 3.0
+            Number 5.0
+            Number 12.0
+        ])
+    ]
+    Number 5.0
+]
+
 [<EntryPoint>]
 let main argv =
-    let program = mapList
+    let program = mapListAndReturnNum
 
     let res = eval program
 
     printfn "%A" res
-
-    Console.ReadKey() |> ignore
 
     0 // return an integer exit code
