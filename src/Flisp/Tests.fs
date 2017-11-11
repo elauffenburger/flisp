@@ -122,3 +122,17 @@ let defineDoesNotClobber = defaultExpr [
         Symbol "foo"
     ]
 ]
+
+let mapAndDefine = defaultExpr [
+    Lispt [
+        Symbol "map"
+        (lambda
+            [Symbol "n"]
+            [Lispt [
+                Lispt[Symbol "define"; Symbol "foo"; Lispt [Symbol "+"; Symbol "n"; Number 1.0]]
+                Lispt[Symbol "print"; Symbol "foo"]
+            ]]
+        )
+        Lispt [Number 1.0; Number 2.0] |> Quote
+    ]
+]
