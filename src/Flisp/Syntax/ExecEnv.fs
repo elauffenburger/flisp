@@ -3,11 +3,7 @@ module Flisp.Syntax.ExecEnv
 open System.Collections.Generic
 open Flisp.Syntax.Common
 
-let addOrUpdate key value env =
-    let data = env.data
-
-    data.Remove(key) |> ignore
-    data.Add(key, value)
+let addOrUpdate key value env = env.data.[key] <- value 
 
 let make (data: IDictionary<string, Cell>) = { data = new Dictionary<string, Cell>(data); parent = None}
 let makeChild env = { data = new Dictionary<string, Cell>(env.data); parent = Some env }
