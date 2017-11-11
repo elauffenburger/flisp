@@ -11,7 +11,7 @@ type Cell =
     | End
     | Whitespace
     | Procedure of Proc
-    | SpecialForm of Proc
+    | MetaProcedure of Proc
     | Quote of Cell
 and Lambda = { parms: Cell list; body: Cell list }
 and ExecEnv = { data: Dictionary<string, Cell>; parent: ExecEnv option }

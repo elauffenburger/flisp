@@ -30,23 +30,28 @@ let rec eval expr =
         let evalRest rest = newExpr rest expr.env |> eval
 
         match x with
-        // For actual procedures we want to evaluate all inner expressions
+
+        // Evaluate all inner expressions and then invoke
         | Procedure proc -> 
             let innerExpression = newExpr xs expr.env |> eval
-            let res = proc.Invoke(innerExpression, expr.env) |> handleProcResult
+            proc.Invoke(innerExpression, expr.env) |> handleProcResult |> List.singleton
 
-            [res]
+        // Examine the ast directly without evaluating inner expressions, then invoke 
+        | MetaProcedure proc -> proc.Invoke(xs, expr.env) |> handleProcResult |> List.singleton
 
-        // For metaprocedures, we want to examine the ast directly
-        | SpecialForm proc -> [proc.Invoke(xs, expr.env) |> handleProcResult]
-
+        // Try to resolve the symbol and then reevaluate with the resolved result
         | Symbol sym -> resolveSymbol sym (fun cell -> eval ({ cells = cell::xs; env = expr.env }))
-        | Lispt cells -> 
-            // We need to evaluate the expression in the list, but only for side effects
-            (evalRest cells) |> ignore
 
-            // The last expression is the one that actually gets returned
+        // Evaluate the list, but throw away the list eval result and treat last expression as the real result
+        | Lispt cells -> 
+            (evalRest cells) |> ignore
             evalRest xs 
+
+        // Just hand back the value and evaluate the rest
         | Number _ -> x :: evalRest xs
+
+        // Treat lambdas like any other value
         | Lambda _ -> x :: evalRest xs 
+
+        // Unwrap the quoted contents and evaluate the rest
         | Quote cell -> cell :: evalRest xs

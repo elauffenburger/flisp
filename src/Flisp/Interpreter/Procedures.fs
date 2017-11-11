@@ -64,7 +64,7 @@ let makeDefaultEnv() =
         "nil", Value nil;
         "map", Procedure (new Proc(map));
         "print", Procedure (new Proc(print));
-        "define", SpecialForm (new Proc(define));
+        "define", MetaProcedure (new Proc(define));
         "+", Procedure (new Proc(add))
     ]
 
