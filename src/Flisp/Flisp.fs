@@ -5,7 +5,7 @@ open Flisp.Interpreter.Eval
 
 [<EntryPoint>]
 let main argv =
-    let program = JankyTests.defineAndPrint
+    let program = JankyTests.defineDoesNotClobber
 
     let res = eval program
 

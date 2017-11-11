@@ -1,6 +1,10 @@
 module Flisp.Interpreter.Eval
 
 open Flisp.Syntax.Common
+open Flisp.Syntax
+
+let lambda parms body = Lambda({ parms = parms; body = body })
+let newExpr cells env = { cells = cells; env = ExecEnv.makeChild env }
 
 let handleProcResult result =
     match result with
@@ -9,9 +13,9 @@ let handleProcResult result =
 
 let rec eval expr =
     let resolveSymbol sym success =
-        match expr.env.TryGetValue(sym) with
-        | (true, cell) -> success cell
-        | _ -> sprintf "Symbol %A not found" sym |> Error |> handleProcResult |> List.singleton
+        match ExecEnv.resolveSymbol sym expr.env with
+        | Some cell -> success cell
+        | None -> sprintf "Symbol %A not found" sym |> Error |> handleProcResult |> List.singleton
 
     match expr.cells with
     | [x] ->

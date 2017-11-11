@@ -3,8 +3,20 @@ module Flisp.Syntax.ExecEnv
 open System.Collections.Generic
 open Flisp.Syntax.Common
 
-let addOrUpdate key value (env: ExecEnv) =
-    env.Remove(key) |> ignore
-    env.Add(key, value)
+let addOrUpdate key value env =
+    let data = env.data
 
-let clone (env: ExecEnv) = new Dictionary<string, Cell>(env)
+    data.Remove(key) |> ignore
+    data.Add(key, value)
+
+let make (data: IDictionary<string, Cell>) = { data = new Dictionary<string, Cell>(data); parent = None}
+let makeChild env = { data = new Dictionary<string, Cell>(env.data); parent = Some env }
+let resolveSymbol symbol env = 
+    match env.data.TryGetValue(symbol) with
+    | (true, cell) -> Some cell
+    | _ -> None
+
+let parentOrSelf env = 
+    match env.parent with
+    | Some parent -> parent
+    | None -> env

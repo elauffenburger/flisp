@@ -14,12 +14,10 @@ type Cell =
     | SpecialForm of Proc
     | Quote of Cell
 and Lambda = { parms: Cell list; body: Cell list }
-and ExecEnv = Dictionary<string, Cell>
+and ExecEnv = { data: Dictionary<string, Cell>; parent: ExecEnv option }
 and ProcResult = Success of Cell | Error of string
 and Proc = delegate of Cell list * ExecEnv -> ProcResult
 
 type Expression = {cells: Cell list; env: ExecEnv }
 
 let nil = ()
-let lambda parms body = Lambda({ parms = parms; body = body })
-let newExpr cells env = { cells = cells; env = env }

@@ -24,7 +24,7 @@ let map cells env =
     | [Lambda ({ parms = [Symbol paramName]; body = fn}); Lispt items] ->
         // The functor
         let iterMap item = 
-            let newEnv = ExecEnv.clone env
+            let newEnv = ExecEnv.makeChild env
 
             // Add functor parameter to environment
             ExecEnv.addOrUpdate paramName item newEnv
@@ -54,13 +54,13 @@ let define cells env =
             | [x] -> x
             | xs -> Lispt xs
 
-        ExecEnv.addOrUpdate symbol evaluatedValue env
+        ExecEnv.addOrUpdate symbol evaluatedValue <| ExecEnv.parentOrSelf env
 
         Success value
     | _ -> Error "Wrong signature for define"
 
 let makeDefaultEnv() =
-    let env = dict [
+    let data = dict [
         "nil", Value nil;
         "map", Procedure (new Proc(map));
         "print", Procedure (new Proc(print));
@@ -68,6 +68,6 @@ let makeDefaultEnv() =
         "+", Procedure (new Proc(add))
     ]
 
-    new ExecEnv(env)
+    ExecEnv.make data
 
 let defaultExpr cells = newExpr cells <| makeDefaultEnv()

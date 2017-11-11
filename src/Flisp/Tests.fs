@@ -2,6 +2,7 @@ module Flisp.JankyTests
 
 open Syntax.Common
 open Flisp.Interpreter.Procedures
+open Flisp.Interpreter.Eval
 
 let printNum = defaultExpr [
     Symbol "print"
@@ -92,6 +93,29 @@ let defineAndPrint = defaultExpr [
         Symbol "define"
         Symbol "foo"
         Number 42.0
+    ]
+    Lispt [
+        Symbol "print"
+        Symbol "foo"
+    ]
+]
+
+let defineDoesNotClobber = defaultExpr [
+    Lispt [
+        Symbol "define"
+        Symbol "foo"
+        Number 42.0
+    ]
+    Lispt [
+        Lispt [
+            Symbol "define"
+            Symbol "foo"
+            Number 50.0
+        ]
+        Lispt [
+            Symbol "print"
+            Symbol "foo"
+        ]
     ]
     Lispt [
         Symbol "print"
