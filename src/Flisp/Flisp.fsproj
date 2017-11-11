@@ -5,10 +5,14 @@
     <TargetFramework>net462</TargetFramework>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>portable</DebugType>
+    <NoWarn>0058</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Syntax/Common.fs" />
+    <Compile Include="Syntax/ExecEnv.fs" />
     <Compile Include="Interpreter/Eval.fs" />
+    <Compile Include="Interpreter/Procedures.fs" />
+    <Compile Include="Tests.fs" />
     <Compile Include="Flisp.fs" />
     <None Include="App.config" />
   </ItemGroup>

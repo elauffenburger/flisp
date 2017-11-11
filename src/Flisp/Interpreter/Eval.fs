@@ -1,7 +1,6 @@
-module Flisp.Core.Interpreter.Eval
+module Flisp.Interpreter.Eval
 
-open System.Collections.Generic
-open Flisp.Core.Syntax.Common
+open Flisp.Syntax.Common
 
 let handleProcResult result =
     match result with
@@ -12,7 +11,7 @@ let rec eval expr =
     let resolveSymbol sym success =
         match expr.env.TryGetValue(sym) with
         | (true, cell) -> success cell
-        | _ -> [handleProcResult (Error "Symbol not found")] 
+        | _ -> sprintf "Symbol %A not found" sym |> Error |> handleProcResult |> List.singleton
 
     match expr.cells with
     | [x] ->
@@ -35,7 +34,7 @@ let rec eval expr =
             [res]
 
         // For metaprocedures, we want to examine the ast directly
-        | MetaProcedure proc -> [proc.Invoke(xs, expr.env) |> handleProcResult]
+        | SpecialForm proc -> [proc.Invoke(xs, expr.env) |> handleProcResult]
 
         | Symbol sym -> resolveSymbol sym (fun cell -> eval ({ cells = cell::xs; env = expr.env }))
         | Lispt cells -> 
@@ -47,64 +46,3 @@ let rec eval expr =
         | Number _ -> x :: evalRest xs
         | Lambda _ -> x :: evalRest xs 
         | Quote cell -> cell :: evalRest xs
-
-let print cells env =
-    match cells with
-    | [] -> Success (Symbol "nil")
-    | _ -> 
-        printfn "%A" cells 
-        Success (Symbol "nil")
-
-let add cells env =
-    match cells with 
-    | [Number x; Number y] -> Success (Number (x+y))
-    | _ -> Error "incorrect signature for add"
-
-let map cells (env: ExecEnv) =
-    match cells with
-
-    // We're looking for a very specific signature for map
-    | [Lambda ({ parms = [Symbol el]; body = fn}); Lispt items] ->
-        // The functor
-        let iterMap item = 
-            let newEnv = new Dictionary<string, Cell>(env)
-
-            // Add functor parameter to environment
-            newEnv.Add(el, item)
-
-            // eval fn 
-            let res = newExpr fn newEnv |> eval
-
-            match res with
-            | [x] -> x
-            | [] -> Symbol "nil"
-            | _ -> Lispt res
-
-        // Map over items
-        let result = items |> List.map iterMap
-        
-        Success (Lispt result)
-
-    | _ -> Error "incorrect signature for map"
-
-let define cells (env: ExecEnv) =
-    match cells with
-    | [Symbol symbol; (value: Cell)] ->
-        // Update the environment with the new symbol
-        env.Add(symbol, value)
-
-        Success value
-    | _ -> Error "Wrong signature for define"
-
-let makeDefaultEnv() =
-    let env = dict [
-        "nil", Value nil;
-        "map", Procedure (new Proc(map));
-        "print", Procedure (new Proc(print));
-        "define", Procedure (new Proc(define));
-        "+", Procedure (new Proc(add))
-    ]
-
-    new ExecEnv(env)
-
-let defaultExpr cells = newExpr cells <| makeDefaultEnv()

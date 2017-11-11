@@ -1,61 +1,11 @@
 module Flisp.Executable
 
-open System
-open Flisp.Core.Syntax.Common
-open Flisp.Core.Interpreter.Eval
-
-let printNum = defaultExpr [
-    Symbol "print"
-    Number 3.14
-]
-
-let addAndPrintNums = defaultExpr [
-    Symbol "print"
-    Lispt [
-        Symbol "+"
-        Number 3.0
-        Number 5.0
-    ]
-]
-
-let mapList = defaultExpr [
-    Symbol "map"
-    (lambda 
-        [Symbol "n"] 
-        [
-            Lispt [Symbol "print"; Symbol "n"]
-            Lispt [Symbol "+"; Symbol "n"; Number 1.0]
-        ])
-    Quote (Lispt [
-        Number 3.0
-        Number 5.0
-        Number 12.0
-    ])
-]
-
-let mapListAndReturnNum = defaultExpr [
-    Lispt [
-        Symbol "map"
-        (lambda 
-            [Symbol "n"] 
-            [Lispt [
-                Symbol "print" 
-                Symbol "n"
-            ];
-            Symbol "n"
-        ])
-        Quote (Lispt [
-            Number 3.0
-            Number 5.0
-            Number 12.0
-        ])
-    ]
-    Number 5.0
-]
+open Syntax.Common
+open Flisp.Interpreter.Eval
 
 [<EntryPoint>]
 let main argv =
-    let program = mapList
+    let program = JankyTests.defineAndPrint
 
     let res = eval program
 

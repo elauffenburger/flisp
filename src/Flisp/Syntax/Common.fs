@@ -1,4 +1,4 @@
-module Flisp.Core.Syntax.Common
+module Flisp.Syntax.Common
 open System.Collections.Generic
 
 type Cell = 
@@ -11,7 +11,7 @@ type Cell =
     | End
     | Whitespace
     | Procedure of Proc
-    | MetaProcedure of Proc
+    | SpecialForm of Proc
     | Quote of Cell
 and Lambda = { parms: Cell list; body: Cell list }
 and ExecEnv = Dictionary<string, Cell>
