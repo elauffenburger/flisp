@@ -4,7 +4,6 @@ open Syntax.Common
 open Flisp.JankyTests
 open Flisp.Core.Logger
 open Flisp.Interpreter.Eval
-open System.Runtime.InteropServices
 
 type TestResult = { 
     name: string

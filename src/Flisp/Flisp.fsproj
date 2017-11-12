@@ -10,7 +10,6 @@
   <ItemGroup>
     <Compile Include="Core/Logger.fs" />
     <Compile Include="Syntax/Common.fs" />
-    <Compile Include="Syntax/ExecEnv.fs" />
     <Compile Include="Interpreter/Eval.fs" />
     <Compile Include="Interpreter/Procedures.fs" />
     <Compile Include="Tests.fs" />

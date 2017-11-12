@@ -14,14 +14,14 @@ let print services cells env =
 
 let add services cells env =
     match cells with 
-    | [Number x; Number y] -> Success (Number (x+y))
+    | [Number x; Number y] -> Success <| Number (x+y)
     | _ -> Error "incorrect signature for add"
 
 let map services cells env =
     match cells with
 
     // We're looking for a very specific signature for map
-    | [Lambda ({ parms = [Symbol paramName]; body = fn}); Lispt items] ->
+    | [Function ({ parms = [Symbol paramName]; body = fn}); Lispt items] ->
         // The functor
         let iterMap item = 
             let newEnv = ExecEnv.makeChild env
@@ -41,7 +41,7 @@ let map services cells env =
         let result = List.map iterMap items
         
         // Return successful result as a Lispt
-        result |> Lispt |> Success
+        Success <| Lispt result
 
     | _ -> Error "incorrect signature for map"
 
@@ -59,13 +59,40 @@ let define services cells env =
         Success value
     | _ -> Error "Wrong signature for define"
 
+let funcall services cells env : ProcResult = 
+    let invoke fnName fn args env =
+        let newEnv = ExecEnv.makeChild env
+
+        let evalArgAndAddToEnv env (arg, paramName) =
+            // eval the arg, then add it to the execution env as the parameter name
+            let execdArg = eval services <| newExpr args env |> Cell.fromList
+            ExecEnv.addOrUpdate paramName execdArg env
+
+        Function.forceParamNames fn
+        |> List.zip args
+        |> List.iter (evalArgAndAddToEnv env)
+
+        eval services <| newExpr fn.body newEnv
+        |> Cell.fromList
+        |> Success
+    
+    // Make sure the call signature for funcall matches funcall
+    match cells with
+    | [Symbol fnName; Lispt args] ->
+        match Function.validate fnName args env with
+        | Function.ValidationResult.Success (fnName, fn, args, env) -> invoke fnName fn args env
+        | Function.ValidationResult.Error _ -> ProcResult.Error "Validation failed"
+
+    | _ -> Error "Wrong signature for funcall"
+
 let makeDefaultEnv() =
     let data = dict [
         "nil", Value nil;
-        "map", Procedure (map);
-        "print", Procedure (print);
-        "define", MetaProcedure (define);
-        "+", Procedure (add)
+        "map", Procedure map;
+        "print", Procedure print;
+        "define", MetaProcedure define;
+        "funcall", MetaProcedure funcall;
+        "+", Procedure add
     ]
 
     ExecEnv.make data

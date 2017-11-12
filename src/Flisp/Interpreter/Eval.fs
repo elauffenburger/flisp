@@ -3,7 +3,7 @@ module Flisp.Interpreter.Eval
 open Flisp.Syntax.Common
 open Flisp.Syntax
 
-let lambda parms body = Lambda({ parms = parms; body = body })
+let lambda parms body = Function({ parms = parms; body = body })
 let newExpr cells env = { cells = cells; env = ExecEnv.makeChild env }
 
 let handleProcResult result =
@@ -28,7 +28,7 @@ let rec eval services expr =
         | Lispt cells -> newExpr cells expr.env |> evalWithServices
         | Value _ -> [x]
         | Number _ -> [x]
-        | Lambda _ -> [x]
+        | Function _ -> [x]
         | Procedure proc | MetaProcedure proc -> (proc services [] expr.env) |> handleProcResult |> List.singleton
         | Quote cell -> [cell]
 
@@ -52,7 +52,7 @@ let rec eval services expr =
             evalRest xs 
 
         // Just hand back the value and evaluate the rest
-        | Number _ | Lambda _ | Value _ -> x :: evalRest xs
+        | Number _ | Function _ | Value _ -> x :: evalRest xs
 
         // Unwrap the quoted contents and evaluate the rest
         | Quote cell -> cell :: evalRest xs
