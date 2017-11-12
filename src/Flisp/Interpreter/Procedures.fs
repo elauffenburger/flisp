@@ -5,19 +5,19 @@ open Flisp.Syntax.Common
 open Flisp.Interpreter.Eval
 open Flisp.Syntax
 
-let print cells env =
+let print services cells env =
     match cells with
     | [] -> Success (Symbol "nil")
     | _ -> 
-        printfn "%A" cells 
+        sprintf "%A" cells |> services.log 
         Success (Symbol "nil")
 
-let add cells env =
+let add services cells env =
     match cells with 
     | [Number x; Number y] -> Success (Number (x+y))
     | _ -> Error "incorrect signature for add"
 
-let map cells env =
+let map services cells env =
     match cells with
 
     // We're looking for a very specific signature for map
@@ -30,7 +30,7 @@ let map cells env =
             ExecEnv.addOrUpdate paramName item newEnv
 
             // eval fn 
-            let res = newExpr fn newEnv |> eval
+            let res = newExpr fn newEnv |> (eval services)
 
             match res with
             | [x] -> x
@@ -45,12 +45,12 @@ let map cells env =
 
     | _ -> Error "incorrect signature for map"
 
-let define cells env =
+let define services cells env =
     match cells with
     | [Symbol symbol; (value: Cell)] ->
         // Update the environment with the new symbol
 
-        let evaluatedValue = match eval <| newExpr [value] env with
+        let evaluatedValue = match (eval services) <| newExpr [value] env with
             | [x] -> x
             | xs -> Lispt xs
 
@@ -62,10 +62,10 @@ let define cells env =
 let makeDefaultEnv() =
     let data = dict [
         "nil", Value nil;
-        "map", Procedure (new Proc(map));
-        "print", Procedure (new Proc(print));
-        "define", MetaProcedure (new Proc(define));
-        "+", Procedure (new Proc(add))
+        "map", Procedure (map);
+        "print", Procedure (print);
+        "define", MetaProcedure (define);
+        "+", Procedure (add)
     ]
 
     ExecEnv.make data

@@ -8,6 +8,7 @@
     <NoWarn>0058</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Core/Logger.fs" />
     <Compile Include="Syntax/Common.fs" />
     <Compile Include="Syntax/ExecEnv.fs" />
     <Compile Include="Interpreter/Eval.fs" />

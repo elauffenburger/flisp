@@ -136,3 +136,60 @@ let mapAndDefine = defaultExpr [
         Lispt [Number 1.0; Number 2.0] |> Quote
     ]
 ]
+
+type TestCase = { name: string; test: Expression; logged: string list; result: Cell list }
+
+let allTests = [
+    { 
+        name = "printNum" 
+        test = printNum 
+        logged = ["[Number 3.14]"]
+        result = [Symbol "nil"]
+    }
+    { 
+        name = "addAndPrintNums" 
+        test = addAndPrintNums
+        logged = ["[Number 8.0]"]
+        result = [Symbol "nil"]
+    }
+    { 
+        name = "mapList" 
+        test = mapList
+        logged = ["[Number 3.0]"; "[Number 5.0]"; "[Number 12.0]"]
+        result = [Lispt [Number 4.0; Number 6.0; Number 13.0]]     
+    }
+    { 
+        name = "mapListAndReturnNum" 
+        test = mapListAndReturnNum
+        logged = ["[Number 3.0]"; "[Number 5.0]"; "[Number 12.0]"]
+        result = [Number 5.0]
+    }
+    { 
+        name = "mapNestedList" 
+        test = mapNestedList
+        logged = []
+        result = [Lispt [
+            Lispt [Number 2.0; Number 3.0; Number 4.0]
+            Lispt [Number 5.0; Number 6.0; Number 8.0]
+            Lispt [Number 8.0; Number 9.0; Number 10.0]
+        ]]
+    }
+    { 
+        name = "defineAndPrint" 
+        test = defineAndPrint
+        logged = ["[Number 42.0]"]
+        result = [Symbol "nil"]
+    }
+    { 
+        name = "defineDoesNotClobber"
+        test = defineDoesNotClobber
+        logged = ["[Number 50.0]"; "[Number 42.0]"]
+        result = [Symbol "nil"]
+    }
+    { 
+        name = "mapAndDefine"
+        test = mapAndDefine
+        logged = ["[Number 2.0]"; "[Number 3.0]"]
+        result = [Lispt [Symbol "nil"; Symbol "nil"]]
+    }
+]

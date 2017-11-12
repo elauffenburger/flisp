@@ -16,7 +16,8 @@ type Cell =
 and Lambda = { parms: Cell list; body: Cell list }
 and ExecEnv = { data: Dictionary<string, Cell>; parent: ExecEnv option }
 and ProcResult = Success of Cell | Error of string
-and Proc = delegate of Cell list * ExecEnv -> ProcResult
+and Services = { log: (string -> unit) }
+and Proc = Services -> Cell list -> ExecEnv -> ProcResult
 
 type Expression = {cells: Cell list; env: ExecEnv }
 
