@@ -65,8 +65,8 @@ let funcall services cells env : ProcResult =
 
         let evalArgAndAddToEnv env (arg, paramName) =
             // eval the arg, then add it to the execution env as the parameter name
-            let execdArg = eval services <| newExpr args env |> Cell.fromList
-            ExecEnv.addOrUpdate paramName execdArg env
+            let execdArg = eval services <| newExpr [arg] env |> Cell.fromList
+            ExecEnv.addOrUpdate paramName execdArg newEnv
 
         Function.forceParamNames fn
         |> List.zip args

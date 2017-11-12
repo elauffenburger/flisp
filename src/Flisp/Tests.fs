@@ -137,6 +137,32 @@ let mapAndDefine = defaultExpr [
     ]
 ]
 
+let funcall = defaultExpr [
+    Lispt [
+        Symbol "define"
+        Symbol "funlambda"
+        (lambda 
+            [Symbol "x"; Symbol "y"]
+            [Lispt [
+                Lispt [Symbol "print"; Lispt[Symbol "+"; Symbol "x"; Symbol "y"]]
+            ]]
+        )
+    ]
+    Lispt [
+        Symbol "define"
+        Symbol "foo"
+        Number 2.0
+    ]
+    Lispt [
+        Symbol "funcall"
+        Symbol "funlambda"
+        Lispt [
+            Quote <| Symbol "foo"
+            Number 40.0
+        ]
+    ]
+]
+
 type TestCase = { name: string; test: Expression; logged: string list; result: Cell list }
 
 let allTests = [
@@ -191,5 +217,11 @@ let allTests = [
         test = mapAndDefine
         logged = ["[Number 2.0]"; "[Number 3.0]"]
         result = [Lispt [Symbol "nil"; Symbol "nil"]]
+    }
+    { 
+        name = "funcall"
+        test = funcall
+        logged = []
+        result = []
     }
 ]
