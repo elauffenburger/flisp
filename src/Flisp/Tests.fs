@@ -20,12 +20,14 @@ let addAndPrintNums = defaultExpr [
 
 let mapList = defaultExpr [
     Symbol "map"
-    (lambda 
-        [Symbol "n"] 
-        [
+    Lispt [
+        Symbol "lambda"
+        Lispt [Symbol "n"] 
+        Lispt [
             Lispt [Symbol "print"; Symbol "n"]
             Lispt [Symbol "+"; Symbol "n"; Number 1.0]
-        ])
+        ]
+    ]
     Quote (Lispt [
         Number 3.0
         Number 5.0
@@ -36,38 +38,35 @@ let mapList = defaultExpr [
 let mapListAndReturnNum = defaultExpr [
     Lispt [
         Symbol "map"
-        (lambda 
-            [Symbol "n"] 
-            [Lispt [
-                Symbol "print" 
-                Symbol "n"
-            ];
-            Symbol "n"
-        ])
-        Quote (Lispt [
-            Number 3.0
-            Number 5.0
-            Number 12.0
-        ])
+        Lispt [
+            Symbol "lambda"
+            Lispt [Symbol "n"] 
+            Lispt [Lispt [Symbol "print"; Symbol "n"]; Symbol "n"]
+        ]
+        Quote(Lispt [ Number 3.0; Number 5.0; Number 12.0 ])
     ]
     Number 5.0
 ]
 
 let mapNestedList = defaultExpr [
     Symbol "map"
-    (lambda 
-        [Symbol "n"]
-        [Lispt [
+    Lispt [
+        Symbol "lambda"
+        Lispt [Symbol "n"]
+        Lispt [Lispt [
             Symbol "map"
-            (lambda 
-                [Symbol "n"]
-                [Lispt [
+            Lispt [
+                Symbol "lambda"
+                Lispt [Symbol "n"]
+                Lispt [Lispt [
                     Symbol "+"
                     Symbol "n"
                     Number 1.0
-                ]])
+                ]]
+            ]
             Symbol "n"
-        ]])
+        ]]
+    ]
     Quote (Lispt
         [
         Lispt [
@@ -126,13 +125,14 @@ let defineDoesNotClobber = defaultExpr [
 let mapAndDefine = defaultExpr [
     Lispt [
         Symbol "map"
-        (lambda
-            [Symbol "n"]
-            [Lispt [
+        Lispt [
+            Symbol "lambda"
+            Lispt [Symbol "n"]
+            Lispt [Lispt [
                 Lispt[Symbol "define"; Symbol "foo"; Lispt [Symbol "+"; Symbol "n"; Number 1.0]]
                 Lispt[Symbol "print"; Symbol "foo"]
             ]]
-        )
+        ]
         Lispt [Number 1.0; Number 2.0] |> Quote
     ]
 ]
@@ -141,12 +141,13 @@ let funcall = defaultExpr [
     Lispt [
         Symbol "define"
         Symbol "funlambda"
-        (lambda 
-            [Symbol "x"; Symbol "y"]
-            [Lispt [
+        Lispt [
+            Symbol "lambda"
+            Lispt [Symbol "x"; Symbol "y"]
+            Lispt [Lispt [
                 Lispt [Symbol "print"; Lispt[Symbol "+"; Symbol "x"; Symbol "y"]]
             ]]
-        )
+        ]
     ]
     Lispt [
         Symbol "define"
@@ -157,7 +158,7 @@ let funcall = defaultExpr [
         Symbol "funcall"
         Symbol "funlambda"
         Lispt [
-            Quote <| Symbol "foo"
+            Symbol "foo"
             Number 40.0
         ]
     ]

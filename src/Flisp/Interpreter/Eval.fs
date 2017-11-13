@@ -3,7 +3,6 @@ module Flisp.Interpreter.Eval
 open Flisp.Syntax.Common
 open Flisp.Syntax
 
-let lambda parms body = Function({ parms = parms; body = body })
 let newExpr cells env = { cells = cells; env = ExecEnv.makeChild env }
 
 let handleProcResult result =
@@ -13,8 +12,9 @@ let handleProcResult result =
 
 let rec eval services expr =
     let evalWithServices = eval services
-
     let evalRest rest = newExpr rest expr.env |> evalWithServices
+    let evalList cells = evalRest cells
+
     let resolveSymbol sym success =
         match ExecEnv.resolveSymbol sym expr.env with
         | Some cell -> success cell
@@ -25,7 +25,7 @@ let rec eval services expr =
     | [x] ->
         match x with
         | Symbol sym -> resolveSymbol sym (fun cell -> [cell])
-        | Lispt cells -> newExpr cells expr.env |> evalWithServices
+        | Lispt cells -> evalList cells
         | Value _ -> [x]
         | Number _ -> [x]
         | Function _ -> [x]
@@ -46,13 +46,27 @@ let rec eval services expr =
         // Try to resolve the symbol and then reevaluate with the resolved result
         | Symbol sym -> resolveSymbol sym (fun cell -> evalWithServices ({ cells = cell::xs; env = expr.env }))
 
-        // Evaluate the list, but throw away the list eval result and treat last expression as the real result
-        | Lispt cells -> 
-            (evalRest cells) |> ignore
-            evalRest xs 
+        // Evaluate the list and then the rest
+        | Lispt cells -> evalList cells @ evalRest xs
 
         // Just hand back the value and evaluate the rest
         | Number _ | Function _ | Value _ -> x :: evalRest xs
 
         // Unwrap the quoted contents and evaluate the rest
         | Quote cell -> cell :: evalRest xs
+
+let apply services fnName fn args env =
+    let newEnv = ExecEnv.makeChild env
+
+    let evalArgAndAddToEnv env (arg, paramName) =
+        // eval the arg, then add it to the execution env as the parameter name
+        let evaldArg = eval services <| newExpr [arg] env |> Cell.fromList
+        ExecEnv.addOrUpdate paramName evaldArg newEnv
+
+    Function.forceParamNames fn
+    |> List.zip args
+    |> List.iter (evalArgAndAddToEnv env)
+
+    match eval services <| newExpr fn.body newEnv |> List.tryLast with
+    | Some result -> Success result
+    | None -> Success (Lispt [])

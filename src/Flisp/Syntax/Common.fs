@@ -10,7 +10,7 @@ type Cell =
     | Procedure of Proc
     | MetaProcedure of Proc
     | Quote of Cell
-and Function = { parms: Cell list; body: Cell list }
+and Function = { parms: Cell list; body: Cell list; env: ExecEnv }
 and ExecEnv = { data: Dictionary<string, Cell>; parent: ExecEnv option }
 and ProcResult = Success of Cell | Error of string
 and Services = { log: (string -> unit) }
@@ -42,10 +42,12 @@ module ExecEnv =
     let make (data: IDictionary<string, Cell>) = { data = new Dictionary<string, Cell>(data); parent = None}
     let makeChild env = { data = new Dictionary<string, Cell>(env.data); parent = Some env }
 
-    let resolveSymbol symbol env = 
+    let rec resolveSymbol symbol env = 
         match env.data.TryGetValue(symbol) with
         | (true, cell) -> Some cell
-        | _ -> None
+        | _ -> match env.parent with
+            | Some parent -> resolveSymbol symbol parent
+            | None -> None
 
     let parentOrSelf env = 
         match env.parent with
