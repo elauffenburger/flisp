@@ -15,6 +15,17 @@ let rec eval services expr =
     let evalRest rest = newExpr rest expr.env |> evalWithServices
     let evalList cells = evalRest cells
 
+    let invokeProcedure proc args env = (proc services args env) |> handleProcResult 
+
+    let funcall env = 
+        let invokeProc2 proc env args = invokeProcedure proc args env
+    
+        match ExecEnv.resolveSymbol "funcall" env with
+        | Some (MetaProcedure fn) -> invokeProc2 fn env
+        | None -> failwith "missing env primitive funcall"
+
+    let evalFn (fn: Function) args = [funcall fn.env args]
+
     let resolveSymbol sym success =
         match ExecEnv.resolveSymbol sym expr.env with
         | Some cell -> success cell
@@ -28,8 +39,8 @@ let rec eval services expr =
         | Lispt cells -> evalList cells
         | Value _ -> [x]
         | Number _ -> [x]
-        | Function _ -> [x]
-        | Procedure proc | MetaProcedure proc -> (proc services [] expr.env) |> handleProcResult |> List.singleton
+        | Function fn -> evalFn fn []
+        | Procedure proc | MetaProcedure proc -> [invokeProcedure proc [] expr.env]
         | Quote cell -> [cell]
 
     | x::xs -> 
@@ -41,7 +52,7 @@ let rec eval services expr =
             (proc services innerExpression expr.env) |> handleProcResult |> List.singleton
 
         // Examine the ast directly without evaluating inner expressions, then invoke 
-        | MetaProcedure proc -> (proc services xs expr.env) |> handleProcResult |> List.singleton
+        | MetaProcedure proc -> invokeProcedure proc xs expr.env |> List.singleton
 
         // Try to resolve the symbol and then reevaluate with the resolved result
         | Symbol sym -> resolveSymbol sym (fun cell -> evalWithServices ({ cells = cell::xs; env = expr.env }))
@@ -50,10 +61,12 @@ let rec eval services expr =
         | Lispt cells -> evalList cells @ evalRest xs
 
         // Just hand back the value and evaluate the rest
-        | Number _ | Function _ | Value _ -> x :: evalRest xs
+        | Number _ | Value _ -> x :: evalRest xs
 
         // Unwrap the quoted contents and evaluate the rest
         | Quote cell -> cell :: evalRest xs
+        
+        | Function fn -> evalFn fn xs
 
 let apply services fnName fn args env =
     let newEnv = ExecEnv.makeChild env
