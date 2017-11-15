@@ -1,16 +1,17 @@
 module Flisp.Executable
 
 open Syntax.Common
-open Flisp.JankyTests
+open JankyTests
 open Flisp.Core.Logger
 open Flisp.Interpreter.Eval
+open Flisp.Interpreter.Procedures
 
 type TestResult = { 
     name: string
     expectedOutput: string list 
     actualOutput: string list
-    expectedResult: Cell list
-    actualResult: Cell list 
+    expectedResult: Cell 
+    actualResult: Cell 
  }
 
 [<EntryPoint>]
@@ -22,10 +23,11 @@ let main argv =
         let mutable logged = List.init 0 (fun i -> "")
         let logger msg = 
             logged <- logged @ [msg]
+            printfn "%A" msg
         
-        let testServices = { log = logger }
+        let testServices = { log = logger; eval = eval; apply = apply }
 
-        let result = eval testServices test.test
+        let result = eval testServices test.test <| makeDefaultEnv()
         printfn "Test: %A\nLogged: %A\nResult: %A\n" test.name logged result
 
         let testResult = {

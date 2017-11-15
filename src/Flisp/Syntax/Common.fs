@@ -4,19 +4,18 @@ open System.Collections.Generic
 type Cell = 
     | Symbol of string
     | Value of obj
+    | String of string
     | Number of float
     | Lispt of Cell list
     | Function of Function
     | Procedure of Proc
     | MetaProcedure of Proc
     | Quote of Cell
-and Function = { parms: Cell list; body: Cell list; env: ExecEnv }
+and Function = { name: string; parms: Cell; body: Cell; env: ExecEnv }
 and ExecEnv = { data: Dictionary<string, Cell>; parent: ExecEnv option }
 and ProcResult = Success of Cell | Error of string
-and Services = { log: (string -> unit) }
+and Services = { log: (string -> unit); eval: (Services -> Cell -> ExecEnv -> Cell); apply: (Services -> string -> Function -> Cell list -> ExecEnv -> ProcResult) }
 and Proc = Services -> Cell list -> ExecEnv -> ProcResult
-
-type Expression = {cells: Cell list; env: ExecEnv }
 
 let nil = ()
 
@@ -24,6 +23,10 @@ module Cell =
     let fromList cells = match cells with
         | [x] -> x
         | xs -> Lispt xs
+    
+    let forceToList cell = match cell with
+        | Lispt cells -> cells
+        | _ -> [cell]
 
 module Symbol =
     type GetNameResult = Success of string | Error
@@ -48,6 +51,10 @@ module ExecEnv =
         | _ -> match env.parent with
             | Some parent -> resolveSymbol symbol parent
             | None -> None
+    
+    let forceResolveSymbol symbol env = match resolveSymbol symbol env with
+    | Some cell -> cell
+    | None -> failwithf "Failed to resolve symbol %A" symbol
 
     let parentOrSelf env = 
         match env.parent with
@@ -55,17 +62,30 @@ module ExecEnv =
         | None -> env
 
 module Function =
-    let paramNames fn = List.map Symbol.getName fn.parms
+    let paramNames fn = List.map Symbol.getName <| Cell.forceToList fn.parms
     let forceParamNames fn = 
         paramNames fn 
         |> List.map (fun nameRes -> 
             match nameRes with
             | Symbol.GetNameResult.Success name -> name
-            | Symbol.GetNameResult.Error -> failwith ""
+            | Symbol.GetNameResult.Error -> failwith "failed to resolve param name"
         )
+
+    let forceInvoke apply cell = match cell with
+        | Function fn -> apply fn []
+        | _ -> failwithf "Failure trying to invoke %A" cell
+    
+    let forceInvokeWithArgs services fn args lexEnv = match fn with
+        | Procedure proc -> 
+            let evaldArgs = List.map (fun x -> services.eval services x lexEnv) args
+
+            proc services evaldArgs lexEnv
+        | MetaProcedure proc -> proc services args lexEnv
+        | Function fn -> services.apply services fn.name fn args fn.env
+        | _ -> failwithf "forceInvokeWithArgs was provided a non-invocable type as its first arg: %A" fn
     
     type ValidationResult = 
-        | Success of string * Function * Cell list * ExecEnv
+        | Success of string * Function * Cell * ExecEnv
         | Error of string
 
     let (>>=) res validateFn = 
@@ -74,8 +94,8 @@ module Function =
         | Error _ -> res
 
     let validateInvocation fnName fn args env =
-        let paramsLength = List.length fn.parms
-        let argsLength = List.length args
+        let paramsLength = List.length <| Cell.forceToList fn.parms
+        let argsLength = List.length <| Cell.forceToList args
 
         if paramsLength = argsLength
         then Success (fnName, fn, args, env)
