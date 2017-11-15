@@ -17,7 +17,7 @@ and ProcResult = Success of Cell | Error of string
 and Services = { log: (string -> unit); eval: (Services -> Cell -> ExecEnv -> Cell); apply: (Services -> string -> Function -> Cell list -> ExecEnv -> ProcResult) }
 and Proc = Services -> Cell list -> ExecEnv -> ProcResult
 
-let nil = ()
+let nil = Symbol "nil"
 
 module Cell = 
     let fromList cells = match cells with

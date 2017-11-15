@@ -4,21 +4,21 @@ open Syntax.Common
 open Flisp.Interpreter.Procedures
 open Flisp.Interpreter.Eval
 
-let printNum = Lispt [
+let printNum = [Lispt [
     Symbol "print"
     Number 3.14
-]
+]]
 
-let addAndPrintNums = Lispt [
+let addAndPrintNums = [Lispt [
     Symbol "print"
     Lispt [
         Symbol "+"
         Number 3.0
         Number 5.0
     ]
-]
+]]
 
-let mapList = Lispt [
+let mapList = [Lispt [
     Symbol "map"
     Lispt [
         Symbol "lambda"
@@ -33,48 +33,9 @@ let mapList = Lispt [
         Number 5.0
         Number 12.0
     ])
-]
+]]
 
-// let mapNestedList = Lispt [
-//     Symbol "map"
-//     Lispt [
-//         Symbol "lambda"
-//         Lispt [Symbol "n"]
-//         Lispt [Lispt [
-//             Symbol "map"
-//             Lispt [
-//                 Symbol "lambda"
-//                 Lispt [Symbol "n"]
-//                 Lispt [Lispt [
-//                     Symbol "+"
-//                     Symbol "n"
-//                     Number 1.0
-//                 ]]
-//             ]
-//             Symbol "n"
-//         ]]
-//     ]
-//     Quote (Lispt
-//         [
-//         Lispt [
-//             Number 1.0
-//             Number 2.0
-//             Number 3.0
-//         ]
-//         Lispt [
-//             Number 4.0
-//             Number 5.0
-//             Number 6.0
-//         ]
-//         Lispt [
-//             Number 7.0
-//             Number 8.0
-//             Number 9.0
-//         ]
-//     ])
-// ]
-
-let defineAndPrint = Lispt [
+let defineAndPrint = [
     Lispt [
         Symbol "define"
         Symbol "foo"
@@ -86,45 +47,28 @@ let defineAndPrint = Lispt [
     ]
 ]
 
-let defineDoesNotClobber = Lispt [
+let mapAndDefine = [Lispt [
+    Symbol "map"
     Lispt [
-        Symbol "define"
-        Symbol "foo"
-        Number 42.0
-    ]
-    Lispt [
+        Symbol "lambda"
+        Lispt [Symbol "n"]
         Lispt [
-            Symbol "define"
-            Symbol "foo"
-            Number 50.0
-        ]
-        Lispt [
-            Symbol "print"
-            Symbol "foo"
-        ]
-    ]
-    Lispt [
-        Symbol "print"
-        Symbol "foo"
-    ]
-]
-
-let mapAndDefine = Lispt [
-    Lispt [
-        Symbol "map"
-        Lispt [
-            Symbol "lambda"
-            Lispt [Symbol "n"]
-            Lispt [Lispt [
-                Lispt[Symbol "define"; Symbol "foo"; Lispt [Symbol "+"; Symbol "n"; Number 1.0]]
+            Symbol "progn"
+            Lispt [
+                Lispt [
+                    Symbol "progn"
+                    Lispt [
+                        Lispt [Symbol "define"; Symbol "foo";]
+                        Lispt [Symbol "+"; Symbol "n"; Number 1.0]]
+                    ]
                 Lispt[Symbol "print"; Symbol "foo"]
-            ]]
+            ]
         ]
-        Lispt [Number 1.0; Number 2.0] |> Quote
     ]
-]
+    Lispt [Number 1.0; Number 2.0] |> Quote
+]]
 
-let funcall = Lispt [
+let funcall = [Lispt [
     Lispt [
         Symbol "define"
         Symbol "funlambda"
@@ -149,61 +93,45 @@ let funcall = Lispt [
             Number 40.0
         ]
     ]
-]
+]]
 
-type TestCase = { name: string; test: Cell; logged: string list; result: Cell }
+type TestCase = { name: string; test: Cell list; logged: string list; results: Cell list option }
 
 let allTests = [
     // { 
     //     name = "printNum" 
     //     test = printNum 
     //     logged = ["Number 3.14"]
-    //     result = Symbol "nil"
+    //     results = Some [Symbol "nil"]
     // }
     // { 
     //     name = "addAndPrintNums" 
     //     test = addAndPrintNums
     //     logged = ["Number 8.0"]
-    //     result = Symbol "nil"
+    //     results = Some [Symbol "nil"]
     // }
     // { 
     //     name = "mapList" 
     //     test = mapList
     //     logged = ["Number 3.0"; "Number 5.0"; "Number 12.0"]
-    //     result = Lispt [Number 4.0; Number 6.0; Number 13.0]
+    //     results = Some [Lispt [Number 4.0; Number 6.0; Number 13.0]]
     // }
     // { 
-    //     name = "mapNestedList" 
-    //     test = mapNestedList
-    //     logged = []
-    //     result = Lispt [
-    //         Lispt [Number 2.0; Number 3.0; Number 4.0]
-    //         Lispt [Number 5.0; Number 6.0; Number 8.0]
-    //         Lispt [Number 8.0; Number 9.0; Number 10.0]
-    //     ]
+    //     name = "defineAndPrint" 
+    //     test = defineAndPrint
+    //     logged = ["Number 42.0"]
+    //     results = Some [Symbol "nil"]
     // }
-    { 
-        name = "defineAndPrint" 
-        test = defineAndPrint
-        logged = ["Number 42.0"]
-        result = Symbol "nil"
-    }
-    { 
-        name = "defineDoesNotClobber"
-        test = defineDoesNotClobber
-        logged = ["Number 50.0"; "Number 42.0"]
-        result = Symbol "nil"
-    }
     { 
         name = "mapAndDefine"
         test = mapAndDefine
         logged = ["Number 2.0"; "Number 3.0"]
-        result = Lispt [Symbol "nil"; Symbol "nil"]
+        results = Some [Lispt [Symbol "nil"; Symbol "nil"]]
     }
     { 
         name = "funcall"
         test = funcall
         logged = []
-        result = Lispt [] 
+        results = Some []
     }
 ]

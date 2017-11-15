@@ -22,10 +22,10 @@ let add services cells env =
 
 let map services cells env =
     match cells with
-    | x::xs -> match x with
-        | Function fn -> 
+    | x::xs -> match (x, xs) with
+        | (Function fn, [Lispt items]) -> 
             // Map over items
-            List.map (fun item -> apply services fn.name fn [item] fn.env) xs
+            List.map (fun item -> apply services fn.name fn [item] fn.env) items
             |> List.fold (fun acc result -> acc @ [handleProcResult result]) []
             |> Cell.fromList
             |> Success
@@ -43,6 +43,16 @@ let define services cells env =
 
         Success value
     | _ -> Error "Wrong signature for define"
+
+let progn services cells env =
+    let exec cell = services.eval services cell env
+
+    let res = match cells with
+    | [] -> nil
+    | [x] -> exec x
+    | _ -> List.map exec cells |> List.last
+
+    Success res
 
 let lambda services cells env =
     match cells with
@@ -64,10 +74,11 @@ let funcall services cells env =
 
 let makeDefaultEnv() =
     let data = dict [
-        "nil", Value nil;
+        "nil", nil;
         "map", Procedure map;
         "print", Procedure print;
         "define", MetaProcedure define;
+        "progn", MetaProcedure progn;
         "lambda", MetaProcedure lambda;
         "funcall", MetaProcedure funcall;
         "+", Procedure add
