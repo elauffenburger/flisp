@@ -24,8 +24,11 @@ let mapList = [Lispt [
         Symbol "lambda"
         Lispt [Symbol "n"] 
         Lispt [
-            Lispt [Symbol "print"; Symbol "n"]
-            Lispt [Symbol "+"; Symbol "n"; Number 1.0]
+            Symbol "progn"
+            Lispt [
+                Lispt [Symbol "print"; Symbol "n"]
+                Lispt [Symbol "+"; Symbol "n"; Number 1.0]
+            ]
         ]
     ]
     Quote (Lispt [
@@ -55,13 +58,8 @@ let mapAndDefine = [Lispt [
         Lispt [
             Symbol "progn"
             Lispt [
-                Lispt [
-                    Symbol "progn"
-                    Lispt [
-                        Lispt [Symbol "define"; Symbol "foo";]
-                        Lispt [Symbol "+"; Symbol "n"; Number 1.0]]
-                    ]
-                Lispt[Symbol "print"; Symbol "foo"]
+                Lispt [Symbol "define"; Symbol "foo"; Lispt [Symbol "+"; Symbol "n"; Number 1.0]]
+                Lispt [Symbol "print"; Symbol "foo"]
             ]
         ]
     ]
@@ -69,28 +67,29 @@ let mapAndDefine = [Lispt [
 ]]
 
 let funcall = [Lispt [
+    Symbol "progn"
     Lispt [
-        Symbol "define"
-        Symbol "funlambda"
         Lispt [
-            Symbol "lambda"
-            Lispt [Symbol "x"; Symbol "y"]
-            Lispt [Lispt [
+            Symbol "define"
+            Symbol "funlambda"
+            Lispt [
+                Symbol "lambda"
+                Lispt [Symbol "x"; Symbol "y"]
                 Lispt [Symbol "print"; Lispt[Symbol "+"; Symbol "x"; Symbol "y"]]
-            ]]
+            ]
         ]
-    ]
-    Lispt [
-        Symbol "define"
-        Symbol "foo"
-        Number 2.0
-    ]
-    Lispt [
-        Symbol "funcall"
-        Symbol "funlambda"
         Lispt [
+            Symbol "define"
             Symbol "foo"
-            Number 40.0
+            Number 2.0
+        ]
+        Lispt [
+            Symbol "funcall"
+            Symbol "funlambda"
+            Lispt [
+                Symbol "foo"
+                Number 40.0
+            ]
         ]
     ]
 ]]
@@ -98,30 +97,30 @@ let funcall = [Lispt [
 type TestCase = { name: string; test: Cell list; logged: string list; results: Cell list option }
 
 let allTests = [
-    // { 
-    //     name = "printNum" 
-    //     test = printNum 
-    //     logged = ["Number 3.14"]
-    //     results = Some [Symbol "nil"]
-    // }
-    // { 
-    //     name = "addAndPrintNums" 
-    //     test = addAndPrintNums
-    //     logged = ["Number 8.0"]
-    //     results = Some [Symbol "nil"]
-    // }
-    // { 
-    //     name = "mapList" 
-    //     test = mapList
-    //     logged = ["Number 3.0"; "Number 5.0"; "Number 12.0"]
-    //     results = Some [Lispt [Number 4.0; Number 6.0; Number 13.0]]
-    // }
-    // { 
-    //     name = "defineAndPrint" 
-    //     test = defineAndPrint
-    //     logged = ["Number 42.0"]
-    //     results = Some [Symbol "nil"]
-    // }
+    { 
+        name = "printNum" 
+        test = printNum 
+        logged = ["Number 3.14"]
+        results = Some [Symbol "nil"]
+    }
+    { 
+        name = "addAndPrintNums" 
+        test = addAndPrintNums
+        logged = ["Number 8.0"]
+        results = Some [Symbol "nil"]
+    }
+    { 
+        name = "mapList" 
+        test = mapList
+        logged = ["Number 3.0"; "Number 5.0"; "Number 12.0"]
+        results = Some [Lispt [Number 4.0; Number 6.0; Number 13.0]]
+    }
+    { 
+        name = "defineAndPrint" 
+        test = defineAndPrint
+        logged = ["Number 42.0"]
+        results = Some [Symbol "nil"]
+    }
     { 
         name = "mapAndDefine"
         test = mapAndDefine
@@ -131,7 +130,7 @@ let allTests = [
     { 
         name = "funcall"
         test = funcall
-        logged = []
-        results = Some []
+        logged = ["Number 42.0"]
+        results = Some [Symbol "nil"]
     }
 ]

@@ -24,7 +24,7 @@ module Cell =
         | [x] -> x
         | xs -> Lispt xs
     
-    let forceToList cell = match cell with
+    let toList cell = match cell with
         | Lispt cells -> cells
         | _ -> [cell]
 
@@ -62,7 +62,7 @@ module ExecEnv =
         | None -> env
 
 module Function =
-    let paramNames fn = List.map Symbol.getName <| Cell.forceToList fn.parms
+    let paramNames fn = List.map Symbol.getName <| Cell.toList fn.parms
     let forceParamNames fn = 
         paramNames fn 
         |> List.map (fun nameRes -> 
@@ -94,8 +94,8 @@ module Function =
         | Error _ -> res
 
     let validateInvocation fnName fn args env =
-        let paramsLength = List.length <| Cell.forceToList fn.parms
-        let argsLength = List.length <| Cell.forceToList args
+        let paramsLength = List.length <| Cell.toList fn.parms
+        let argsLength = List.length <| Cell.toList args
 
         if paramsLength = argsLength
         then Success (fnName, fn, args, env)

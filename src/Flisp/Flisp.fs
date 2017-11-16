@@ -39,8 +39,7 @@ let main argv =
         // Helper for evaluation: if an eval throws, convert the result to None
         let evalExpr expr env = 
             try 
-                eval testServices expr env
-                |> Some
+                Some <| eval testServices expr env
             with
             | e -> 
                 log e.Message |> ignore

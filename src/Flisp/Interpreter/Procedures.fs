@@ -39,7 +39,7 @@ let define services cells env =
         let evaluatedValue = eval services value env
 
         // Update the environment with the new symbol
-        ExecEnv.addOrUpdate symbol evaluatedValue <| ExecEnv.parentOrSelf env
+        ExecEnv.addOrUpdate symbol evaluatedValue env
 
         Success value
     | _ -> Error "Wrong signature for define"
@@ -47,12 +47,9 @@ let define services cells env =
 let progn services cells env =
     let exec cell = services.eval services cell env
 
-    let res = match cells with
-    | [] -> nil
-    | [x] -> exec x
-    | _ -> List.map exec cells |> List.last
-
-    Success res
+    match cells with
+    | [Lispt exprs] -> List.map exec exprs |> List.last |> Success
+    | _ -> Error "Wrong signature for progn"
 
 let lambda services cells env =
     match cells with
@@ -60,14 +57,18 @@ let lambda services cells env =
     | _ -> Error "Wrong signature for lambda"
 
 let funcall services cells env = 
+    let applyFn fnName fn args env = 
+        // eval arguments with the current environment, then apply function in its own environment
+        let evaldArgs = 
+            Cell.toList args
+            |> List.map (fun arg -> services.eval services arg env)
+
+        apply services fnName fn evaldArgs fn.env
+
     match cells with
     | [Symbol fnName; Lispt _ as args] ->
         match Function.validate fnName args env with
-        | Function.ValidationResult.Success (fnName, fn, args, env) -> 
-            // eval arguments with the current environment, then apply function in its own environment
-            let evaldArgs = services.eval services args env |> Cell.forceToList
-
-            apply services fnName fn evaldArgs fn.env
+        | Function.ValidationResult.Success (fnName, fn, args, env) -> applyFn fnName fn args env
         | Function.ValidationResult.Error err -> Error err 
 
     | _ -> Error "Wrong signature for funcall"

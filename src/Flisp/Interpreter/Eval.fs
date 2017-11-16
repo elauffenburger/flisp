@@ -34,7 +34,4 @@ let apply services fnName fn args env =
     |> List.zip args
     |> List.iter (addArgToEv env)
 
-    Cell.forceToList fn.body
-    |> List.map (eval newEnv)
-    |> List.last
-    |> Success
+    Success (eval newEnv fn.body)
