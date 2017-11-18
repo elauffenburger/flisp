@@ -1,4 +1,4 @@
-module Flisp.Parser
+module Flisp.Interpreter.Parser
 
 open System
 open System.Collections.Generic
@@ -34,8 +34,6 @@ let private takeSecond (_, b) = b
 
 let parse services (str: string) : Cell = 
     let rec parseInner (str: string) : Cell list = 
-        services.log <| sprintf "Parsing %A" str
-
         let rest = strToList str 
 
         match rest with 
@@ -58,23 +56,27 @@ let parse services (str: string) : Cell =
                             | _ -> getInnerExpr xs (acc@[x]) stack
                     | (_, true) -> (acc, expr)
 
-                let (innerExprWithParens, rest) = getInnerExpr rest [] [] 
+                let (innerExprWithParens, right) = getInnerExpr rest [] [] 
                 let innerExpr = 
                     innerExprWithParens
                     |> List.skip 1 
                     |> (List.take <| (List.length innerExprWithParens) - 2)
                     |> charsToString 
 
-                services.log <| sprintf "innerExpr: %A" innerExpr
-
-                match (parseInner innerExpr |> Lispt, parseInner (charsToString rest)) with
+                match (parseInner innerExpr |> Lispt, parseInner (charsToString right)) with
                 | (first, []) -> [first]
-                | (first, second) -> first::[(second |> Cell.fromList)]
+                | (first, second) -> first::second
 
             | ')' -> failwith "unmatched ')' in expression"
             | '\'' -> (parseInner <| charsToString xs) |> Cell.fromList |> Quote |> List.singleton 
             | _ -> 
                 let (symbol, rest) = (splitAtIndexWhere (fun c -> c = ')' || c = '(' || c = ' ') rest)
-                (Symbol <| charsToString symbol) :: (parseInner <| charsToString rest)
+                let symbolStr = charsToString symbol 
 
-    parseInner str |> Cell.fromList
+                let res = match Double.TryParse symbolStr with
+                    | (true, num) -> Number num
+                    | _ -> Symbol symbolStr
+
+                res :: (parseInner <| charsToString rest)
+
+    parseInner str |> Cell.fromList 

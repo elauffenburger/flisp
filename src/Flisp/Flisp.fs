@@ -1,60 +1,50 @@
 module Flisp.Executable
 
 open Syntax.Common
-open JankyTests.Models
-open JankyTests.Expressions
-open JankyTests.Parsing
 open Flisp.Interpreter.Eval
 open Flisp.Interpreter.Procedures
-open Parser
+open Flisp.Interpreter.Parser
+open Flisp.Interpreter.Exec
+open System
 
-type TestResult = { 
-    name: string
-    expectedOutput: string list 
-    actualOutput: string list
-    expectedResults: Cell list option
-    actualResults: Cell list option
- }
+let test() = JankyTests.Core.executeAllTests()
+let repl() =
+    let services = { parse = parse; exec = exec; apply = apply; eval = eval; log = printf "%A"; logRaw = printf "%O" }
+    let env = makeDefaultEnv()
+
+    let splitNFromEnd n input = 
+        let count = String.length input
+        let join (chars: char[]) = String.Join("", chars)
+
+        input.ToCharArray() |> Array.splitAt (count - n) |> (fun (a, b) -> (join a, join b))
+
+    let mutable input = "" 
+    let rec read() = 
+        services.logRaw <| "\n>"
+
+        input <- input + Console.ReadLine() 
+
+        match splitNFromEnd 2 input with
+        | (expr, ";;") -> 
+            try
+                sprintf "\n%A" <| services.exec services env expr
+                |> services.log
+                |> ignore
+            with
+            | e -> services.log <| sprintf "Error in expression: %A" e.Message
+
+            input <- ""
+        | _ -> ignore()
+
+        read()
+    
+    services.logRaw <| "Welcome to Flisp!\n"
+    read()
 
 [<EntryPoint>]
 let main argv =
-    let mutable passed: TestResult list = []
-    let mutable failed: TestResult list = []
-
-    let getTestNames tests = List.map (fun t -> t.name) tests
-
-    let exec (test: TestCase) =
-        // Keeps track of logged messages
-        let mutable logged = List.init 0 (fun i -> "")
-        let log msg = logged <- logged @ [msg]
-        
-        // Test services to inject into the interpreter
-        let testServices = { log = log; eval = eval; apply = apply; parse = parse }
-
-        let results = test.test testServices
-
-        printfn "Test: %A\nLogged: %A\nResult: %A\n" test.name logged results
-
-        let testResults = {
-            name = test.name
-            expectedOutput = test.logged
-            actualOutput = logged
-            expectedResults = test.results
-            actualResults = results
-        }
-
-        // Make sure our console output matches what we expect
-        let outputEqual = (List.compareWith (fun (i:string) (j:string) -> i.CompareTo(j)) test.logged logged) = 0
-
-        match outputEqual with
-        | true -> passed <- passed @ [testResults]
-        | false -> failed <- failed @ [testResults]
-
-    // Run all tests
-    List.iter exec <| expressionTests @ parseTests
-    |> ignore
-
-    // Report status
-    printfn "passed:\n%A\nfailed:%A\n" (getTestNames passed) (getTestNames failed)
+    match argv with
+    | [||] -> repl()
+    | [|"--test"|] -> test()
 
     0

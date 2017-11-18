@@ -7,13 +7,13 @@ let basic = "(print 'hello)"
 
 let callFunc = "(print (+ 1 2))"
 
-let complex = "(progn (define foo (lambda (n) (+ n 12))) (print (+ 12 foo)) (map 'list (lambda (n) (print n)) '(1 2 3)))"
+let complex = "(progn ((define foo (lambda (n) (+ n 12))) (print (+ 12 foo)) (map (lambda (n) (print n)) '(1 2 3))))"
 
 type ParseTest = { name: string; test: string; logged: string list; results: Cell list option }
 
 let safeParse services str = 
     try 
-        services.parse services str |> Some
+        services.parse services str |>  Some
     with
     | e -> 
         services.log e.Message
