@@ -12,7 +12,10 @@
     <Compile Include="Syntax/Common.fs" />
     <Compile Include="Interpreter/Eval.fs" />
     <Compile Include="Interpreter/Procedures.fs" />
-    <Compile Include="Tests.fs" />
+    <Compile Include="Interpreter/Parser.fs" />
+    <Compile Include="JankyTests/Models.fs" />
+    <Compile Include="JankyTests/Expressions.fs" />
+    <Compile Include="JankyTests/Parsing.fs" />
     <Compile Include="Flisp.fs" />
     <None Include="App.config" />
   </ItemGroup>

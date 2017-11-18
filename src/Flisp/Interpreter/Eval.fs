@@ -27,8 +27,7 @@ let apply services fnName fn args env =
     let newEnv = ExecEnv.makeChild env
 
     let eval env cell = services.eval services cell env
-    let addArgToEv env (arg, paramName) = 
-        ExecEnv.addOrUpdate paramName arg newEnv
+    let addArgToEv env (arg, paramName) = ExecEnv.addOrUpdate paramName arg newEnv
 
     Function.forceParamNames fn
     |> List.zip args

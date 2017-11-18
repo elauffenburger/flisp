@@ -14,7 +14,12 @@ type Cell =
 and Function = { name: string; parms: Cell; body: Cell; env: ExecEnv }
 and ExecEnv = { data: Dictionary<string, Cell>; parent: ExecEnv option }
 and ProcResult = Success of Cell | Error of string
-and Services = { log: (string -> unit); eval: (Services -> Cell -> ExecEnv -> Cell); apply: (Services -> string -> Function -> Cell list -> ExecEnv -> ProcResult) }
+and Services = { 
+    log: string -> unit; 
+    eval: Services -> Cell -> ExecEnv -> Cell; 
+    apply: Services -> string -> Function -> Cell list -> ExecEnv -> ProcResult
+    parse: Services -> string -> Cell
+}
 and Proc = Services -> Cell list -> ExecEnv -> ProcResult
 
 let nil = Symbol "nil"

@@ -1,9 +1,12 @@
 module Flisp.Executable
 
 open Syntax.Common
-open JankyTests
+open JankyTests.Models
+open JankyTests.Expressions
+open JankyTests.Parsing
 open Flisp.Interpreter.Eval
 open Flisp.Interpreter.Procedures
+open Parser
 
 type TestResult = { 
     name: string
@@ -20,34 +23,15 @@ let main argv =
 
     let getTestNames tests = List.map (fun t -> t.name) tests
 
-    let exec test =
-        // Converts a Cell option list to a Cell list option
-        let collectResults results =
-            List.fold (fun acc res -> 
-                match (acc, res) with 
-                | (Some a, Some r) -> Some (a @ [r])
-                | _ -> None
-            ) (Some []) results
-
+    let exec (test: TestCase) =
         // Keeps track of logged messages
         let mutable logged = List.init 0 (fun i -> "")
         let log msg = logged <- logged @ [msg]
         
-        // Test services to inject into the interpretor
-        let testServices = { log = log; eval = eval; apply = apply }
+        // Test services to inject into the interpreter
+        let testServices = { log = log; eval = eval; apply = apply; parse = parse }
 
-        // Helper for evaluation: if an eval throws, convert the result to None
-        let evalExpr expr env = 
-            try 
-                Some <| eval testServices expr env
-            with
-            | e -> 
-                log e.Message |> ignore
-                None
-
-        // Create a shared test environment and run each expression
-        let env = makeDefaultEnv()
-        let results = List.map (fun expr -> evalExpr expr env) test.test
+        let results = test.test testServices
 
         printfn "Test: %A\nLogged: %A\nResult: %A\n" test.name logged results
 
@@ -56,7 +40,7 @@ let main argv =
             expectedOutput = test.logged
             actualOutput = logged
             expectedResults = test.results
-            actualResults = collectResults results
+            actualResults = results
         }
 
         // Make sure our console output matches what we expect
@@ -67,7 +51,8 @@ let main argv =
         | false -> failed <- failed @ [testResults]
 
     // Run all tests
-    List.iter exec allTests
+    List.iter exec <| expressionTests @ parseTests
+    |> ignore
 
     // Report status
     printfn "passed:\n%A\nfailed:%A\n" (getTestNames passed) (getTestNames failed)
