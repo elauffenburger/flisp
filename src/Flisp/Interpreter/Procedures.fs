@@ -73,12 +73,22 @@ let funcall services cells env =
 
     | _ -> Error "Wrong signature for funcall"
 
+let defun services cells env =
+    match cells with
+    | [Symbol sym; Lispt _ as parms; Lispt _ as body] ->
+        let fn = Function <| { name = sym; body = body; parms = parms; env = env } 
+        ExecEnv.addOrUpdate sym fn env
+
+        Success fn
+    | _ -> Error "Wrong signature for defun"
+
 let makeDefaultEnv() =
     let data = dict [
         "nil", nil;
         "map", Procedure map;
         "print", Procedure print;
         "define", MetaProcedure define;
+        "defun", MetaProcedure defun;
         "progn", MetaProcedure progn;
         "lambda", MetaProcedure lambda;
         "funcall", MetaProcedure funcall;
