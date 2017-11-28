@@ -1,6 +1,7 @@
 module Flisp.Syntax.Common
 open System.Collections.Generic
 
+/// <summary>A "thing" in Flisp</summary>
 type Cell = 
     | Symbol of string
     | Value of obj

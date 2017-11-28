@@ -12,6 +12,8 @@ let complex = "(progn ((define foo 5) (define bar 10) (map (lambda (n) (+ foo (+
 
 let defun = "(progn ((defun the-fun (n) (print n)) (the-fun 5)))"
 
+let printstr = "(print \"hello world!\")"
+
 type CombinedTest = { name: string; test: string; logged: string list; results: Cell list option }
 
 let safeExec services str = 
@@ -48,6 +50,12 @@ let combinedTests =
     {
         name = "defun"
         test = defun
+        logged = []
+        results = Some []
+    }
+    {
+        name = "printstr"
+        test = printstr
         logged = []
         results = Some []
     }

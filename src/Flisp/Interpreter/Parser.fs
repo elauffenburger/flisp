@@ -32,6 +32,7 @@ let private splitAtIndexWhere pred chars = match List.tryFindIndex pred chars wi
 
 let private takeSecond (_, b) = b
 
+/// <summary>Given a string input, returns a Cell representation that can be evaluated</summary>
 let parse services (str: string) : Cell = 
     let rec parseInner (str: string) : Cell list = 
         let rest = strToList str 
@@ -41,6 +42,11 @@ let parse services (str: string) : Cell =
         | x::xs -> match x with 
             | ' ' -> parseInner <| charsToString xs
             | '(' -> 
+                // Splits the input into the next immediate expression and everything after
+                // that expression (meaning, splits "(foo (bar) baz)" into "foo, (bar) baz", parses "foo",
+                // then parses "(bar) baz")
+
+                // Gets an expression surrounded by "()"
                 let rec getInnerExpr expr acc stack =
                     let (accLen, stackLen) = (List.length acc, List.length stack)
                     match (accLen = 0, stackLen = 0) with
@@ -57,12 +63,16 @@ let parse services (str: string) : Cell =
                     | (_, true) -> (acc, expr)
 
                 let (innerExprWithParens, right) = getInnerExpr rest [] [] 
+
+                // Get the expression inside of "()"
                 let innerExpr = 
                     innerExprWithParens
                     |> List.skip 1 
                     |> (List.take <| (List.length innerExprWithParens) - 2)
                     |> charsToString 
 
+                // Parse the inner expression, then parse the rest independently
+                // So, this is what parses "foo" and "(bar) baz" independently, then joins the results
                 match (parseInner innerExpr |> Lispt, parseInner (charsToString right)) with
                 | (first, []) -> [first]
                 | (first, second) -> first::second
@@ -70,6 +80,7 @@ let parse services (str: string) : Cell =
             | ')' -> failwith "unmatched ')' in expression"
             | '\'' -> (parseInner <| charsToString xs) |> Cell.fromList |> Quote |> List.singleton 
             | _ -> 
+                // If we're not dealing with a special character, we're parsing a symbol
                 let (symbol, rest) = (splitAtIndexWhere (fun c -> c = ')' || c = '(' || c = ' ') rest)
                 let symbolStr = charsToString symbol 
 

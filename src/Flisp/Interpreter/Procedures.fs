@@ -6,6 +6,7 @@ open Flisp.Interpreter.Eval
 open Flisp.Syntax
 open System.Text.RegularExpressions
 
+// (print symbol)
 let print services cells env =
     let printout arg = sprintf "%A" arg |> services.log 
 
@@ -15,11 +16,29 @@ let print services cells env =
 
     Success (Symbol "nil")
 
-let add services cells env =
+// Helper function for numeric operations
+let numeric services cells env opName op =
     match cells with 
-    | [Number x; Number y] -> Success <| Number (x+y)
-    | _ -> Error "incorrect signature for add"
+    | [Number x; Number y] -> Success <| Number (op x y)
+    | _ -> Error <| sprintf "incorrect signature for %s" opName
 
+// (+ number number)
+let add services cells env =
+    numeric services cells env "add" (+)
+
+// (- number number)
+let sub services cells env =
+    numeric services cells env "sub" (-)
+
+// (* number number)
+let mult services cells env =
+    numeric services cells env "mult" (*)
+
+// (/ number number)
+let div services cells env =
+    numeric services cells env "div" (/)
+
+// (map 'fn '(sym sym))
 let map services cells env =
     match cells with
     | x::xs -> match (x, xs) with
@@ -33,6 +52,7 @@ let map services cells env =
         | _ -> Error "incorrect signature for map"
     | _ -> Error "incorrect signature for map"
 
+// (define sym expr)
 let define services cells env =
     match cells with
     | [Symbol symbol; (value: Cell)] ->
@@ -44,6 +64,7 @@ let define services cells env =
         Success value
     | _ -> Error "Wrong signature for define"
 
+// (progn (expr expr))
 let progn services cells env =
     let exec cell = services.eval services cell env
 
@@ -51,11 +72,13 @@ let progn services cells env =
     | [Lispt exprs] -> List.map exec exprs |> List.last |> Success
     | _ -> Error "Wrong signature for progn"
 
+// (lambda (params) (body))
 let lambda services cells env =
     match cells with
     | [Lispt _ as parms; Lispt _ as body] -> Function ({ name = "lambda"; parms = parms; body = body; env = env }) |> Success
     | _ -> Error "Wrong signature for lambda"
 
+// (funcall fn (args))
 let funcall services cells env = 
     let applyFn fnName fn args env = 
         // eval arguments with the current environment, then apply function in its own environment
@@ -73,6 +96,7 @@ let funcall services cells env =
 
     | _ -> Error "Wrong signature for funcall"
 
+// (defun fn (args) (body))
 let defun services cells env =
     match cells with
     | [Symbol sym; Lispt _ as parms; Lispt _ as body] ->
@@ -93,6 +117,9 @@ let makeDefaultEnv() =
         "lambda", MetaProcedure lambda;
         "funcall", MetaProcedure funcall;
         "+", Procedure add
+        "-", Procedure sub
+        "*", Procedure mult
+        "/", Procedure div
     ]
 
     ExecEnv.make data

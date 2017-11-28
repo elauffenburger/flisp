@@ -8,6 +8,7 @@ let handleProcResult result =
     | Error err -> failwith err
     | Success cell -> cell
 
+/// <summary>Given a Cell representation of an expression, evaluates the result</summary>
 let rec eval services expr env =
     let evalWithServices cell = eval services cell env
     let applyWithServices fn args = 
@@ -23,6 +24,7 @@ let rec eval services expr env =
         | [x] -> Function.forceInvoke applyWithServices x
         | x::xs -> Function.forceInvokeWithArgs services (evalWithServices x) xs env |> handleProcResult
 
+/// <summary>Invokes a Function expression</summary>
 let apply services fnName fn args env =
     let newEnv = ExecEnv.makeChild env
 
