@@ -22,10 +22,10 @@ let repl() =
     let rec read() = 
         services.logRaw <| "\n>"
 
-        input <- input + Console.ReadLine() 
+        input <- input + Console.ReadLine() + "\n"
 
-        match splitNFromEnd 2 input with
-        | (expr, ";;") -> 
+        match splitNFromEnd 3 input with
+        | (expr, ";;\n") -> 
             try
                 sprintf "\n%A" <| services.exec services env expr
                 |> services.log

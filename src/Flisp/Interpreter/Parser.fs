@@ -4,6 +4,7 @@ open System
 open System.Collections.Generic
 open System.Text.RegularExpressions
 open Flisp.Syntax.Common
+open Flisp.Helpers.String
 
 type ParseState =
     | InExpression
@@ -89,5 +90,11 @@ let parse services (str: string) : Cell =
                     | _ -> Symbol symbolStr
 
                 res :: (parseInner <| charsToString rest)
+    
+    let sanitize (str: string): string =
+        replace "\r\n" " " str
+        |> replace "\n" " "
 
-    parseInner str |> Cell.fromList 
+    sanitize str
+    |> parseInner 
+    |> Cell.fromList 

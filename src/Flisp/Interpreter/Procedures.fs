@@ -108,14 +108,14 @@ let defun services cells env =
 
 let makeDefaultEnv() =
     let data = dict [
-        "nil", nil;
-        "map", Procedure map;
-        "print", Procedure print;
-        "define", MetaProcedure define;
-        "defun", MetaProcedure defun;
-        "progn", MetaProcedure progn;
-        "lambda", MetaProcedure lambda;
-        "funcall", MetaProcedure funcall;
+        "nil", nil
+        "map", Procedure map
+        "print", Procedure print
+        "define", MetaProcedure define
+        "defun", MetaProcedure defun
+        "progn", MetaProcedure progn
+        "lambda", MetaProcedure lambda
+        "funcall", MetaProcedure funcall
         "+", Procedure add
         "-", Procedure sub
         "*", Procedure mult
